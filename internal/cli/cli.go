@@ -7,7 +7,7 @@ import (
 	"instahost/internal/cipher"
 )
 
-const DefaultBaseURL = "index.html"
+const DefaultBaseURL = "https://timdelange.github.io/instahost/"
 
 func Usage() string {
 	return `Usage: share <file> [--base-url <url>] [--key <passphrase>]
@@ -15,7 +15,7 @@ func Usage() string {
   Minify, compress, obfuscate, and encode an HTML file into a shareable URL.
 
 Options:
-  --base-url <url>   Base URL for the static page (default: index.html)
+  --base-url <url>   Base URL for the static page (default: https://timdelange.github.io/instahost/)
   --key <passphrase> XOR obfuscation key (default: built-in key)
   -h, --help         Show this help`
 }

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"instahost/internal/cli"
 	"instahost/internal/encode"
 )
 
@@ -51,7 +52,8 @@ func TestCLISuccess(t *testing.T) {
 		t.Fatalf("exit code = %d, stderr = %s", code, stderr)
 	}
 	url := strings.TrimSpace(stdout)
-	if !regexp.MustCompile(`^index\.html\?d=[A-Za-z0-9_-]+$`).MatchString(url) {
+	prefix := regexp.QuoteMeta(cli.DefaultBaseURL) + `\?d=[A-Za-z0-9_-]+$`
+	if !regexp.MustCompile(`^` + prefix).MatchString(url) {
 		t.Fatalf("stdout = %q", url)
 	}
 	for _, line := range []string{"Original:", "Minified:", "Compressed:", "URL length:"} {
@@ -76,7 +78,7 @@ func TestCLIKeyParam(t *testing.T) {
 	if code != 0 {
 		t.Fatal("expected success")
 	}
-	if !regexp.MustCompile(`^index\.html\?d=[A-Za-z0-9_-]+&k=c2VjcmV0$`).MatchString(strings.TrimSpace(stdout)) {
+	if !regexp.MustCompile(`^` + regexp.QuoteMeta(cli.DefaultBaseURL) + `\?d=[A-Za-z0-9_-]+&k=c2VjcmV0$`).MatchString(strings.TrimSpace(stdout)) {
 		t.Fatalf("stdout = %q", stdout)
 	}
 }
@@ -87,7 +89,7 @@ func TestCLIRoundTrip(t *testing.T) {
 		t.Fatal("expected success")
 	}
 	url := strings.TrimSpace(stdout)
-	payload := strings.TrimPrefix(url, "index.html?d=")
+	payload := strings.TrimPrefix(url, cli.DefaultBaseURL+"?d=")
 	decoded, err := encode.DecodePayload(payload, "instahost")
 	if err != nil {
 		t.Fatal(err)
