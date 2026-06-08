@@ -8,7 +8,9 @@
   },
   "scripts": {
     "share": "node bin/share.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "build:go": "bash scripts/build.sh",
+    "build:go:all": "bash scripts/build-all.sh"
   },
   "dependencies": {
     "html-minifier-terser": "^7.2.0"
