@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { gzipSync } from "node:zlib";
-import { encodeHtml, buildShareUrl } from "../lib/encode.js";
+import { encodeHtml, buildShareUrl, urlLengthWarning, MAX_SHARE_URL_LENGTH } from "../lib/encode.js";
 import { decodePayload, extractPayloadFromUrl } from "../lib/decode.js";
 import { CHECKSUM_BYTES, DEFAULT_KEY } from "../lib/cipher.js";
 
@@ -76,6 +76,20 @@ describe("encodeHtml", () => {
 
     assert.equal(first.encoded, second.encoded);
     assert.equal(first.minified, second.minified);
+  });
+});
+
+describe("urlLengthWarning", () => {
+  it("returns empty string when URL is within the limit", () => {
+    assert.equal(urlLengthWarning("a".repeat(MAX_SHARE_URL_LENGTH)), "");
+  });
+
+  it("warns when URL exceeds the limit", () => {
+    const warning = urlLengthWarning("a".repeat(MAX_SHARE_URL_LENGTH + 1));
+
+    assert.match(warning, /WARNING/);
+    assert.match(warning, /8192/);
+    assert.match(warning, /Slack/);
   });
 });
 

@@ -44,6 +44,9 @@ func main() {
 	url := encode.BuildShareURL(result.Options.BaseURL, encoded.Encoded, result.Options.Key)
 
 	fmt.Println(url)
+	if warning := encode.URLLengthWarning(url); warning != "" {
+		fmt.Fprint(os.Stderr, warning)
+	}
 	fmt.Fprintf(os.Stderr, "\nOriginal:  %d bytes\n", len(html))
 	fmt.Fprintf(os.Stderr, "Minified:  %d bytes\n", len(encoded.Minified))
 	fmt.Fprintf(os.Stderr, "Compressed: %d bytes\n", len(encoded.Compressed))

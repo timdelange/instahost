@@ -16,6 +16,8 @@ import (
 	"instahost/internal/cipher"
 )
 
+const MaxShareURLLength = 8192
+
 type Result struct {
 	Minified   string
 	Compressed []byte
@@ -84,6 +86,17 @@ func BuildShareURL(baseURL, encoded, key string) string {
 	}
 
 	return shareURL
+}
+
+func URLLengthWarning(url string) string {
+	if len(url) <= MaxShareURLLength {
+		return ""
+	}
+	return fmt.Sprintf(
+		"\n*** WARNING: URL length is %d chars and exceeds %d characters. ***\n*** Some apps (including Slack) may truncate or refuse to send this link. ***\n\n",
+		len(url),
+		MaxShareURLLength,
+	)
 }
 
 func ExtractPayloadFromURL(rawURL string) (payload string, key string, err error) {

@@ -96,6 +96,19 @@ func TestEncodeStable(t *testing.T) {
 	}
 }
 
+func TestURLLengthWarning(t *testing.T) {
+	if got := URLLengthWarning(strings.Repeat("a", MaxShareURLLength)); got != "" {
+		t.Fatalf("unexpected warning: %q", got)
+	}
+	got := URLLengthWarning(strings.Repeat("a", MaxShareURLLength+1))
+	if got == "" {
+		t.Fatal("expected warning for long URL")
+	}
+	if !strings.Contains(got, "8192") {
+		t.Fatalf("warning = %q", got)
+	}
+}
+
 func TestBuildShareURL(t *testing.T) {
 	if got := BuildShareURL("index.html", "abc123", cipher.DefaultKey); got != "index.html#d=abc123" {
 		t.Fatalf("url = %q", got)
