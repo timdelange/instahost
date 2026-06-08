@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InstaHost</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #0f1117;
+      color: #e6e8ef;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #status {
+      max-width: 32rem;
+      padding: 2rem;
+      text-align: center;
+      line-height: 1.5;
+    }
+    #status a { color: #7eb8ff; }
+    #status.error { color: #f87171; }
+  </style>
+</head>
+<body>
+  <div id="status">Loading…</div>
+  <script>
+    function base64UrlDecode(input) {
+      const base64 = input.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+      const binary = atob(padded);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    const DEFAULT_KEY = "instahost";
+    const CHECKSUM_BYTES = 4;
+
+    const CRC32_TABLE = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let j = 0; j < 8; j++) {
+        c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      CRC32_TABLE[i] = c;
+    }
+
+    function crc32(data) {
+      let crc = 0xffffffff;
+      for (let i = 0; i < data.length; i++) {
+        crc = CRC32_TABLE[(crc ^ data[i]) & 0xff] ^ (crc >>> 8);
+      }
+      return (crc ^ 0xffffffff) >>> 0;
+    }
+
+    function openWithChecksum(data) {
+      if (data.length <= CHECKSUM_BYTES) return null;
+      const payload = data.subarray(0, data.length - CHECKSUM_BYTES);
+      const stored = new DataView(data.buffer, data.byteOffset + data.length - CHECKSUM_BYTES, CHECKSUM_BYTES).getUint32(0);
+      if (stored !== crc32(payload)) return null;
+      return payload;
+    }
+
+    function xorBytes(data, key) {
+      const keyBytes = new TextEncoder().encode(key);
+      const out = new Uint8Array(data.length);
+      for (let i = 0; i < data.length; i++) {
+        out[i] = data[i] ^ keyBytes[i % keyBytes.length];
+      }
+      return out;
+    }
+
+    async function gunzip(bytes) {
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+      return await new Response(stream).text();
+    }
+
+    function resolveKey(params) {
+      const keyParam = params.get("k");
+      if (!keyParam) return DEFAULT_KEY;
+      const padded = keyParam.replace(/-/g, "+").replace(/_/g, "/")
+        + "=".repeat((4 - (keyParam.length % 4)) % 4);
+      return new TextDecoder().decode(Uint8Array.from(atob(padded), (c) => c.charCodeAt(0)));
+    }
+
+    function showError(message) {
+      const el = document.getElementById("status");
+      el.className = "error";
+      el.textContent = message;
+    }
+
+    async function render() {
+      const params = new URLSearchParams(location.search);
+      const encoded = params.get("d");
+
+      if (!encoded) {
+        showError("No content. Use the share CLI to generate a URL.");
+        return;
+      }
+
+      if (!("DecompressionStream" in window)) {
+        showError("This browser does not support decompression. Try a recent Chrome, Firefox, or Safari.");
+        return;
+      }
+
+      try {
+        const key = resolveKey(params);
+        const bytes = base64UrlDecode(encoded);
+        let html;
+        try {
+          const deobfuscated = xorBytes(bytes, key);
+          const payload = openWithChecksum(deobfuscated);
+          html = await gunzip(payload ?? deobfuscated);
+        } catch {
+          html = await gunzip(bytes);
+        }
+        document.open();
+        document.write(html);
+        document.close();
+      } catch (err) {
+        showError("Failed to decode content: " + err.message);
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "instahost",
+  "version": "1.0.0",
+  "description": "Share static HTML via URL-encoded compressed content",
+  "type": "module",
+  "bin": {
+    "share": "./bin/share.js"
+  },
+  "scripts": {
+    "share": "node bin/share.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "html-minifier-terser": "^7.2.0"
+  }
+}

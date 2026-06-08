@@ -1,0 +1,2 @@
+create a static webpage that takes content from a query parameter in url-safe base64 and renders that as html. Create a share cli util that will minify, compress and create the url for a given file. 
+
