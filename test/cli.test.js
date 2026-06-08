@@ -61,7 +61,7 @@ describe("share CLI", () => {
     const result = runShare([exampleFile]);
 
     assert.equal(result.status, 0);
-    assert.match(result.stdout.trim(), new RegExp(`^${DEFAULT_BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\?d=[A-Za-z0-9_-]+$`));
+    assert.match(result.stdout.trim(), new RegExp(`^${DEFAULT_BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}#d=[A-Za-z0-9_-]+$`));
     assert.match(result.stderr, /Original:/);
     assert.match(result.stderr, /Minified:/);
     assert.match(result.stderr, /Compressed:/);
@@ -72,14 +72,14 @@ describe("share CLI", () => {
     const result = runShare([exampleFile, "--base-url", "https://example.com/host/"]);
 
     assert.equal(result.status, 0);
-    assert.match(result.stdout.trim(), /^https:\/\/example\.com\/host\/\?d=[A-Za-z0-9_-]+$/);
+    assert.match(result.stdout.trim(), /^https:\/\/example\.com\/host\/#d=[A-Za-z0-9_-]+$/);
   });
 
   it("includes k param when --key is used", () => {
     const result = runShare([exampleFile, "--key", "secret"]);
 
     assert.equal(result.status, 0);
-    assert.match(result.stdout.trim(), new RegExp(`^${DEFAULT_BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\?d=[A-Za-z0-9_-]+&k=c2VjcmV0$`));
+    assert.match(result.stdout.trim(), new RegExp(`^${DEFAULT_BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}#d=[A-Za-z0-9_-]+&k=c2VjcmV0$`));
   });
 
   it("CLI output round-trips to original minified HTML", () => {

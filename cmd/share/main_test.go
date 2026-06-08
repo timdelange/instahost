@@ -52,7 +52,7 @@ func TestCLISuccess(t *testing.T) {
 		t.Fatalf("exit code = %d, stderr = %s", code, stderr)
 	}
 	url := strings.TrimSpace(stdout)
-	prefix := regexp.QuoteMeta(cli.DefaultBaseURL) + `\?d=[A-Za-z0-9_-]+$`
+	prefix := regexp.QuoteMeta(cli.DefaultBaseURL) + `#d=[A-Za-z0-9_-]+$`
 	if !regexp.MustCompile(`^` + prefix).MatchString(url) {
 		t.Fatalf("stdout = %q", url)
 	}
@@ -68,7 +68,7 @@ func TestCLIBaseURL(t *testing.T) {
 	if code != 0 {
 		t.Fatal("expected success")
 	}
-	if !regexp.MustCompile(`^https://example\.com/host/\?d=[A-Za-z0-9_-]+$`).MatchString(strings.TrimSpace(stdout)) {
+	if !regexp.MustCompile(`^https://example\.com/host/#d=[A-Za-z0-9_-]+$`).MatchString(strings.TrimSpace(stdout)) {
 		t.Fatalf("stdout = %q", stdout)
 	}
 }
@@ -78,7 +78,7 @@ func TestCLIKeyParam(t *testing.T) {
 	if code != 0 {
 		t.Fatal("expected success")
 	}
-	if !regexp.MustCompile(`^` + regexp.QuoteMeta(cli.DefaultBaseURL) + `\?d=[A-Za-z0-9_-]+&k=c2VjcmV0$`).MatchString(strings.TrimSpace(stdout)) {
+	if !regexp.MustCompile(`^` + regexp.QuoteMeta(cli.DefaultBaseURL) + `#d=[A-Za-z0-9_-]+&k=c2VjcmV0$`).MatchString(strings.TrimSpace(stdout)) {
 		t.Fatalf("stdout = %q", stdout)
 	}
 }
@@ -89,8 +89,14 @@ func TestCLIRoundTrip(t *testing.T) {
 		t.Fatal("expected success")
 	}
 	url := strings.TrimSpace(stdout)
-	payload := strings.TrimPrefix(url, cli.DefaultBaseURL+"?d=")
-	decoded, err := encode.DecodePayload(payload, "instahost")
+	payload, key, err := encode.ExtractPayloadFromURL(url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if key != "instahost" {
+		t.Fatalf("key = %q", key)
+	}
+	decoded, err := encode.DecodePayload(payload, key)
 	if err != nil {
 		t.Fatal(err)
 	}

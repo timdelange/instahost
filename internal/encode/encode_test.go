@@ -97,14 +97,32 @@ func TestEncodeStable(t *testing.T) {
 }
 
 func TestBuildShareURL(t *testing.T) {
-	if got := BuildShareURL("index.html", "abc123", cipher.DefaultKey); got != "index.html?d=abc123" {
+	if got := BuildShareURL("index.html", "abc123", cipher.DefaultKey); got != "index.html#d=abc123" {
 		t.Fatalf("url = %q", got)
 	}
-	if got := BuildShareURL("https://example.com/page?foo=bar", "abc123", cipher.DefaultKey); got != "https://example.com/page?foo=bar&d=abc123" {
+	if got := BuildShareURL("https://example.com/page?foo=bar", "abc123", cipher.DefaultKey); got != "https://example.com/page?foo=bar#d=abc123" {
 		t.Fatalf("url = %q", got)
 	}
-	if got := BuildShareURL("index.html", "abc123", "secret"); got != "index.html?d=abc123&k=c2VjcmV0" {
+	if got := BuildShareURL("index.html", "abc123", "secret"); got != "index.html#d=abc123&k=c2VjcmV0" {
 		t.Fatalf("url = %q", got)
+	}
+}
+
+func TestExtractPayloadFromURL(t *testing.T) {
+	payload, key, err := ExtractPayloadFromURL("https://example.com/#d=abc123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if payload != "abc123" || key != cipher.DefaultKey {
+		t.Fatalf("payload = %q key = %q", payload, key)
+	}
+
+	payload, key, err = ExtractPayloadFromURL("https://example.com/#d=abc123&k=c2VjcmV0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if payload != "abc123" || key != "secret" {
+		t.Fatalf("payload = %q key = %q", payload, key)
 	}
 }
 

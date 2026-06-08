@@ -80,29 +80,29 @@ describe("encodeHtml", () => {
 });
 
 describe("buildShareUrl", () => {
-  it("appends d query param to a plain base URL", () => {
+  it("appends d fragment to a plain base URL", () => {
     const url = buildShareUrl("index.html", "abc123");
 
-    assert.equal(url, "index.html?d=abc123");
+    assert.equal(url, "index.html#d=abc123");
   });
 
-  it("uses & when base URL already has query params", () => {
+  it("keeps existing query params before the fragment", () => {
     const url = buildShareUrl("https://example.com/page?foo=bar", "abc123");
 
-    assert.equal(url, "https://example.com/page?foo=bar&d=abc123");
+    assert.equal(url, "https://example.com/page?foo=bar#d=abc123");
   });
 
   it("omits k param for the default key", () => {
     const url = buildShareUrl("index.html", "abc123", DEFAULT_KEY);
 
-    assert.equal(url, "index.html?d=abc123");
+    assert.equal(url, "index.html#d=abc123");
     assert.ok(!url.includes("k="));
   });
 
   it("includes k param for a custom key", () => {
     const url = buildShareUrl("index.html", "abc123", "secret");
 
-    assert.match(url, /^index\.html\?d=abc123&k=c2VjcmV0$/);
+    assert.match(url, /^index\.html#d=abc123&k=c2VjcmV0$/);
   });
 });
 

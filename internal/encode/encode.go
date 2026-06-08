@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
+	"fmt"
 	"io"
+	"net/url"
 	"strings"
 
 	"github.com/tdewolff/minify/v2"
@@ -76,17 +78,40 @@ func BuildShareURL(baseURL, encoded, key string) string {
 		key = cipher.DefaultKey
 	}
 
-	separator := "?"
-	if strings.Contains(baseURL, "?") {
-		separator = "&"
-	}
-	url := baseURL + separator + "d=" + encoded
-
+	shareURL := baseURL + "#d=" + encoded
 	if key != cipher.DefaultKey {
-		url += "&k=" + base64.RawURLEncoding.EncodeToString([]byte(key))
+		shareURL += "&k=" + base64.RawURLEncoding.EncodeToString([]byte(key))
 	}
 
-	return url
+	return shareURL
+}
+
+func ExtractPayloadFromURL(rawURL string) (payload string, key string, err error) {
+	hashIndex := strings.Index(rawURL, "#")
+	if hashIndex < 0 {
+		return "", "", fmt.Errorf("missing URL fragment")
+	}
+
+	values, err := url.ParseQuery(rawURL[hashIndex+1:])
+	if err != nil {
+		return "", "", err
+	}
+
+	payload = values.Get("d")
+	if payload == "" {
+		return "", "", fmt.Errorf("missing d in URL fragment")
+	}
+
+	key = cipher.DefaultKey
+	if keyParam := values.Get("k"); keyParam != "" {
+		decoded, err := base64.RawURLEncoding.DecodeString(keyParam)
+		if err != nil {
+			return "", "", err
+		}
+		key = string(decoded)
+	}
+
+	return payload, key, nil
 }
 
 func DecodePayload(encoded, key string) (string, error) {
